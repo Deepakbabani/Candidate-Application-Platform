@@ -1,7 +1,46 @@
 import { Box, TextField, Grid } from "@mui/material";
 import JobCard from "./components/JobCard";
+import Select from "react-select";
+import { useDispatch } from "react-redux";
+import { useEffect, useState } from "react";
+import { fetchJobs } from "./redux/slices/JobSlice";
+import useInfiniteScroll from "./hooks/useInfiniteScroll";
 
 const CandidateDashboard = () => {
+  const dispatch = useDispatch();
+  const options = [
+    { value: "chocolate", label: "Chocolate" },
+    { value: "strawberry", label: "Strawberry" },
+    { value: "vanilla", label: "Vanilla" },
+  ];
+  const [items, setItems] = useState([]);
+
+  const fetchJobsData = async (page) => {
+    try {
+      const res = await dispatch(fetchJobs(page)).unwrap();
+      return res.jdList;
+    } catch (error) {
+      console.error("Error fetching jobs:", error);
+      throw error;
+    }
+  };
+
+  const { data, loading, hasMore } = useInfiniteScroll(fetchJobsData);
+
+  useEffect(() => {
+    dispatch(fetchJobs(0))
+      .unwrap()
+      .then((res) => {
+        setItems(res?.jdList || []);
+      })
+      .catch(() => setItems([]));
+  }, []);
+
+  useEffect(() => {
+    if (data) {
+      setItems(data);
+    }
+  }, [data, setItems]);
   return (
     <main>
       <Box className="MuiBox-root css-1nzysqx">
@@ -23,64 +62,72 @@ const CandidateDashboard = () => {
                       <Box className="MuiBox-root css-xzgtof">
                         <div className="profile-sidebar jd-filters-container MuiBox-root css-1yxoz1i">
                           <Box className="MuiBox-root css-b62m3t-container">
-                            <TextField
+                            <Select
                               id="roles"
-                              label="Roles"
-                              variant="outlined"
-                              fullWidth
+                              className="select__input"
+                              closeMenuOnSelect={false}
+                              isMulti
                               placeholder="Roles"
-                              className="select__input"
+                              options={options}
                             />
                           </Box>
                           <Box className="MuiBox-root css-b62m3t-container">
-                            <TextField
+                            <Select
                               id="number-of-employees"
-                              label="Number Of Employees"
-                              variant="outlined"
-                              fullWidth
+                              className="select__input"
+                              closeMenuOnSelect={false}
+                              isMulti
                               placeholder="Number Of Employees"
-                              className="select__input"
+                              options={options}
                             />
                           </Box>
                           <Box className="MuiBox-root css-b62m3t-container">
-                            <TextField
+                            <Select
                               id="experience"
-                              label="Experience"
-                              variant="outlined"
-                              fullWidth
-                              placeholder="Experience"
                               className="select__input"
+                              closeMenuOnSelect={false}
+                              isMulti
+                              placeholder="Experience"
+                              options={options}
                             />
                           </Box>
                           <Box className="MuiBox-root css-b62m3t-container">
-                            <TextField
+                            <Select
                               id="remote"
-                              label="Remote"
-                              variant="outlined"
-                              fullWidth
-                              placeholder="Remote"
                               className="select__input"
+                              closeMenuOnSelect={false}
+                              isMulti
+                              placeholder="Remote"
+                              options={options}
                             />
                           </Box>
                           <Box className="MuiBox-root css-13cymwt-control">
-                            <TextField
+                            <Select
                               id="minimum-base-pay"
-                              label="Minimum Base Pay Salary"
-                              variant="outlined"
-                              fullWidth
-                              placeholder="Minimum Base Pay Salary"
                               className="select__input"
+                              closeMenuOnSelect={false}
+                              isMulti
+                              placeholder="Minimum Base Pay Salary"
+                              options={options}
                             />
                           </Box>
                           <Box className="MuiBox-root css-j7qwjs">
-                            <TextField
-                              id="company-name"
-                              label="Search Company Name"
-                              variant="outlined"
-                              fullWidth
-                              placeholder="Search Company Name"
-                              className="MuiInputBase-input MuiOutlinedInput-input css-1x5jdmq"
-                            />
+                            <div className="MuiFormControl-root MuiTextField-root css-1upf982">
+                              <TextField
+                                id="companyName"
+                                name="companyName"
+                                placeholder="Search Company Name"
+                                variant="outlined"
+                                className="MuiInputBase-root MuiOutlinedInput-root MuiInputBase-colorPrimary MuiInputBase-formControl css-1d5t4lq"
+                                inputProps={{
+                                  className:
+                                    "MuiInputBase-input MuiOutlinedInput-input css-1x5jdmq",
+                                }}
+                                value=""
+                                autoComplete="off"
+                                aria-invalid="false"
+                              />
+                            </div>
                           </Box>
                         </div>
                         <div>
@@ -99,12 +146,14 @@ const CandidateDashboard = () => {
                                   marginRight: "auto",
                                 }}
                               >
-                                <JobCard />
-                                <JobCard />
-                                <JobCard />
+                                {items.map((item, index) => (
+                                  <JobCard key={index} />
+                                ))}
                               </Grid>
                             </Grid>
                           </Grid>
+                          {loading && <div className="spinner">Loading...</div>}
+                          {!loading && !hasMore && <div>All items loaded</div>}
                         </div>
                       </Box>
                     </div>

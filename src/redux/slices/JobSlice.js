@@ -1,16 +1,28 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 // import { getErrorMessage } from "../../utils/utils";
+const myHeaders = new Headers();
+myHeaders.append("Content-Type", "application/json");
 
 export const fetchJobs = createAsyncThunk(
   "fetchJobs",
-  async (params, thunkAPI) => {
+  async (page, thunkAPI) => {
     try {
-      //   const data = await instance
-      //     .post(apiPath.signIn, params)
-      //     .then((response) => {
-      //       return response.data;
-      //     });
-      //   return data;
+      const body = JSON.stringify({
+        limit: 10,
+        offset: page,
+      });
+
+      const requestOptions = {
+        method: "POST",
+        headers: myHeaders,
+        body,
+      };
+
+      const response = await fetch(
+        "https://api.weekday.technology/adhoc/getSampleJdJSON",
+        requestOptions
+      );
+      return response.json();
     } catch (error) {
       //   const message = getErrorMessage(error);
       const message = "";
