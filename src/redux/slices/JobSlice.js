@@ -1,8 +1,9 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-// import { getErrorMessage } from "../../utils/utils";
+import { getErrorMessage } from "../../utils/utils";
 const myHeaders = new Headers();
 myHeaders.append("Content-Type", "application/json");
 
+// Api logic to fetch jobs
 export const fetchJobs = createAsyncThunk(
   "fetchJobs",
   async (page, thunkAPI) => {
@@ -24,8 +25,7 @@ export const fetchJobs = createAsyncThunk(
       );
       return response.json();
     } catch (error) {
-      //   const message = getErrorMessage(error);
-      const message = "";
+      const message = getErrorMessage(error);
       return thunkAPI.rejectWithValue(message);
     }
   }
@@ -34,8 +34,11 @@ export const fetchJobs = createAsyncThunk(
 const initialState = {
   jobsData: [],
   filters: {
-    limit: "10",
-    offset: "0",
+    jobRole: null,
+    minExp: null,
+    location: null,
+    minJdSalary: null,
+    companyName: "",
   },
 };
 
@@ -43,17 +46,25 @@ export const jobSlice = createSlice({
   name: "job",
   initialState,
   reducers: {
-    // setCount: (state, { payload }) => {
-    //   state.count += payload;
-    // },
-  },
-  extraReducers: (builder) => {
-    builder.addCase(fetchJobs.fulfilled, (state, { payload }) => {
-      state.token = payload.data?.token;
-      state.isLogin = true;
-    });
+    setJobsList: (state, { payload }) => {
+      state.jobsData = payload;
+    },
+    filterJobs: (state, { payload }) => {
+      const { key, value } = payload;
+      if (Array.isArray(value)) {
+        state.filters = {
+          ...state.filters,
+          [key]: value.length > 0 ? value : null,
+        };
+      } else {
+        state.filters = {
+          ...state.filters,
+          [key]: value,
+        };
+      }
+    },
   },
 });
 const { actions } = jobSlice;
-export const { setCount } = actions;
+export const { setJobsList, filterJobs } = actions;
 export default jobSlice.reducer;

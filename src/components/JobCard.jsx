@@ -6,8 +6,11 @@ import {
   Button,
   Grid,
 } from "@mui/material";
+import PropTypes from "prop-types";
+import { showTitleCase } from "../utils/utils";
 
-const JobCard = () => {
+const JobCard = ({ jobData }) => {
+  //here jobData contains job details
   return (
     <Grid
       item
@@ -25,33 +28,26 @@ const JobCard = () => {
           className="funding-info funding-info-dummy"
         />
         <Box className="MuiBox-root css-103zer2">
-          <Box className="MuiBox-root css-ntgrxp">
-            <Box className="MuiBox-root css-1ewacfc">
-              <Typography
-                variant="body1"
-                className="MuiTypography-root MuiTypography-body1 css-9spv16"
-              >
-                ⏳ Posted 4 days ago
-              </Typography>
-            </Box>
-          </Box>
+          <Box className="MuiBox-root css-ntgrxp"></Box>
         </Box>
         <CardContent className="MuiCardContent-root css-1go74o8">
           <Box className="MuiBox-root css-1mrd89u">
             <img
               className="MuiBox-root css-bj12qo"
-              src="https://storage.googleapis.com/weekday-assets/airtableAttachment_1714542815382_7w5g1.jpg"
+              src={jobData?.logoUrl || ""}
               alt="logo"
             />
             <div>
               <div className="info-container">
                 <Typography variant="h3" className="MuiBox-root css-rulwqv">
-                  FlexWash Technologies
+                  {jobData?.companyName}
                 </Typography>
-                <Typography variant="h2">Senior Engineer</Typography>
+                <Typography variant="h2">
+                  {showTitleCase(jobData?.jobRole)}
+                </Typography>
               </div>
               <Typography variant="subtitle1" className="cards-sub-text">
-                India | Exp: 5-5 years
+                {showTitleCase(jobData?.location)}
               </Typography>
             </div>
           </Box>
@@ -59,7 +55,9 @@ const JobCard = () => {
             variant="body2"
             className="MuiTypography-root MuiTypography-body2 card-salary css-361mbm"
           >
-            Estimated Salary: ₹30 - 60 LPA
+            Estimated Salary: ₹
+            {jobData?.minJdSalary && `${jobData?.minJdSalary} -`}
+            {jobData?.maxJdSalary} LPA
             <span aria-label="Offered salary range" className="">
               {" "}
               ✅
@@ -83,9 +81,7 @@ const JobCard = () => {
                 </Typography>
                 <Typography variant="body1">
                   <span style={{ fontWeight: 400 }}>
-                    Flex Wash is an operating system for the car wash industry.
-                    Our solutions help owners manage their operations and grow
-                    revenue.&nbsp;
+                    {jobData?.jobDetailsFromCompany}
                   </span>
                 </Typography>
                 <Typography variant="body1">
@@ -163,41 +159,14 @@ const JobCard = () => {
               View job
             </a>
           </div>
-          <div className="info-container poc-info-container">
-            <Typography variant="h3" style={{ marginTop: 10 }}>
-              Skills
-            </Typography>
-            <div
-              className="hard-lang-container"
-              style={{ justifyContent: "start", margin: 0 }}
-            >
-              <Typography
-                variant="body1"
-                className="hard-lang-skill"
-                style={{ margin: "2px 5px 2px 0px" }}
-              >
-                Typescript
+          {jobData?.minExp && (
+            <div className="info-container poc-info-container">
+              <Typography variant="h3" style={{ marginTop: 10 }}>
+                Minimum Experience
               </Typography>
-              <Typography
-                variant="body1"
-                className="hard-lang-skill"
-                style={{ margin: "2px 5px 2px 0px" }}
-              >
-                Founding Engineer
-              </Typography>
-              <Typography
-                variant="body1"
-                className="hard-lang-skill"
-                style={{ margin: "2px 5px 2px 0px" }}
-              >
-                Senior Engineer
-              </Typography>
+              <Typography variant="h2">{jobData?.minExp} years</Typography>
             </div>
-            <Typography variant="h3" style={{ marginTop: 10 }}>
-              Minimum Experience
-            </Typography>
-            <Typography variant="h2">5 years</Typography>
-          </div>
+          )}
         </CardContent>
         <div className="status-container MuiBox-root css-0">
           <div className="MuiBox-root css-q40y17">
@@ -219,10 +188,33 @@ const JobCard = () => {
               ⚡ Easy Apply
             </Button>
           </div>
+          <div className="MuiBox-root css-q40y17">
+            <Button
+              variant="text"
+              color="primary"
+              className="MuiButton-root MuiButton-text MuiButton-textPrimary MuiButton-sizeMedium MuiButton-textSizeMedium MuiButton-colorPrimary MuiButton-root MuiButton-text MuiButton-textPrimary MuiButton-sizeMedium MuiButton-textSizeMedium MuiButton-colorPrimary css-1dyt7kc"
+              tabIndex={0}
+              type="button"
+              id="custom-btn"
+              style={{
+                width: "100%",
+                backgroundColor: "#1a73e8",
+                color: "#fff",
+                fontWeight: 500,
+                padding: "8px 18px",
+              }}
+            >
+              Unlock referral asks
+            </Button>
+          </div>
         </div>
       </Paper>
     </Grid>
   );
+};
+
+JobCard.propTypes = {
+  jobData: PropTypes.object,
 };
 
 export default JobCard;

@@ -1,21 +1,18 @@
-import { Box, TextField, Grid } from "@mui/material";
+import { Box, Card, CardContent, Grid, Typography } from "@mui/material";
 import JobCard from "./components/JobCard";
-import Select from "react-select";
-import { useDispatch } from "react-redux";
-import { useEffect, useState } from "react";
-import { fetchJobs } from "./redux/slices/JobSlice";
+
+import { useDispatch, useSelector } from "react-redux";
+import { useEffect, useMemo } from "react";
+import { fetchJobs, setJobsList } from "./redux/slices/JobSlice";
 import useInfiniteScroll from "./hooks/useInfiniteScroll";
+import FilterContainer from "./components/FilterContainer";
 
 const CandidateDashboard = () => {
   const dispatch = useDispatch();
-  const options = [
-    { value: "chocolate", label: "Chocolate" },
-    { value: "strawberry", label: "Strawberry" },
-    { value: "vanilla", label: "Vanilla" },
-  ];
-  const [items, setItems] = useState([]);
+  const { jobsData, filters } = useSelector((state) => state.job);
 
   const fetchJobsData = async (page) => {
+    // calling apis using redux toolkit
     try {
       const res = await dispatch(fetchJobs(page)).unwrap();
       return res.jdList;
@@ -25,22 +22,71 @@ const CandidateDashboard = () => {
     }
   };
 
+  // A custom hook for infinite scrolling
   const { data, loading, hasMore } = useInfiniteScroll(fetchJobsData);
+
+  const filterJobsData = useMemo(() => {
+    // Memoized function to filter jobsData based on filters
+    let filterData = jobsData;
+    Object.keys(filters).forEach((key) => {
+      // Iterate through each filter and apply corresponding filtering logic
+      const value = filters[key];
+      if (value) {
+        const values = Array.isArray(value)
+          ? value.map((item) => item.value)
+          : value.value;
+        switch (key) {
+          case "jobRole":
+            filterData = filterData.filter((item) =>
+              values.includes(item?.jobRole)
+            );
+            break;
+          case "minExp":
+            filterData = filterData.filter((item) => item.minExp <= values);
+            break;
+          case "location":
+            filterData = filterData.filter((item) => {
+              if (values.includes("remote") && values.includes("in-office")) {
+                return item;
+              } else if (values.includes("in-office")) {
+                return item.location !== "remote";
+              } else {
+                return values.includes(item.location);
+              }
+            });
+            break;
+          case "minJdSalary":
+            filterData = filterData.filter(
+              (item) => item.minJdSalary >= values
+            );
+            break;
+          case "companyName":
+            filterData = filterData.filter((item) =>
+              item.companyName.toLowerCase().includes(value.toLowerCase())
+            );
+            break;
+          default:
+            break;
+        }
+      }
+    });
+    return filterData;
+  }, [jobsData, filters]);
 
   useEffect(() => {
     dispatch(fetchJobs(0))
       .unwrap()
       .then((res) => {
-        setItems(res?.jdList || []);
+        dispatch(setJobsList(res?.jdList || []));
       })
-      .catch(() => setItems([]));
-  }, []);
+      .catch(() => dispatch(setJobsList([])));
+  }, [dispatch]);
 
   useEffect(() => {
     if (data) {
-      setItems(data);
+      dispatch(setJobsList(data));
     }
-  }, [data, setItems]);
+  }, [data, dispatch]);
   return (
     <main>
       <Box className="MuiBox-root css-1nzysqx">
@@ -60,76 +106,7 @@ const CandidateDashboard = () => {
                   >
                     <div id="active-jobs">
                       <Box className="MuiBox-root css-xzgtof">
-                        <div className="profile-sidebar jd-filters-container MuiBox-root css-1yxoz1i">
-                          <Box className="MuiBox-root css-b62m3t-container">
-                            <Select
-                              id="roles"
-                              className="select__input"
-                              closeMenuOnSelect={false}
-                              isMulti
-                              placeholder="Roles"
-                              options={options}
-                            />
-                          </Box>
-                          <Box className="MuiBox-root css-b62m3t-container">
-                            <Select
-                              id="number-of-employees"
-                              className="select__input"
-                              closeMenuOnSelect={false}
-                              isMulti
-                              placeholder="Number Of Employees"
-                              options={options}
-                            />
-                          </Box>
-                          <Box className="MuiBox-root css-b62m3t-container">
-                            <Select
-                              id="experience"
-                              className="select__input"
-                              closeMenuOnSelect={false}
-                              isMulti
-                              placeholder="Experience"
-                              options={options}
-                            />
-                          </Box>
-                          <Box className="MuiBox-root css-b62m3t-container">
-                            <Select
-                              id="remote"
-                              className="select__input"
-                              closeMenuOnSelect={false}
-                              isMulti
-                              placeholder="Remote"
-                              options={options}
-                            />
-                          </Box>
-                          <Box className="MuiBox-root css-13cymwt-control">
-                            <Select
-                              id="minimum-base-pay"
-                              className="select__input"
-                              closeMenuOnSelect={false}
-                              isMulti
-                              placeholder="Minimum Base Pay Salary"
-                              options={options}
-                            />
-                          </Box>
-                          <Box className="MuiBox-root css-j7qwjs">
-                            <div className="MuiFormControl-root MuiTextField-root css-1upf982">
-                              <TextField
-                                id="companyName"
-                                name="companyName"
-                                placeholder="Search Company Name"
-                                variant="outlined"
-                                className="MuiInputBase-root MuiOutlinedInput-root MuiInputBase-colorPrimary MuiInputBase-formControl css-1d5t4lq"
-                                inputProps={{
-                                  className:
-                                    "MuiInputBase-input MuiOutlinedInput-input css-1x5jdmq",
-                                }}
-                                value=""
-                                autoComplete="off"
-                                aria-invalid="false"
-                              />
-                            </div>
-                          </Box>
-                        </div>
+                        <FilterContainer />
                         <div>
                           <Grid
                             container
@@ -146,13 +123,22 @@ const CandidateDashboard = () => {
                                   marginRight: "auto",
                                 }}
                               >
-                                {items.map((item, index) => (
-                                  <JobCard key={index} />
+                                {filterJobsData.map((item, index) => (
+                                  <JobCard key={index} jobData={item} />
                                 ))}
                               </Grid>
                             </Grid>
                           </Grid>
                           {loading && <div className="spinner">Loading...</div>}
+                          {filterJobsData.length === 0 && (
+                            <Card sx={{ textAlign: "center", marginTop: 4 }}>
+                              <CardContent>
+                                <Typography variant="body1">
+                                  No data found
+                                </Typography>
+                              </CardContent>
+                            </Card>
+                          )}
                           {!loading && !hasMore && <div>All items loaded</div>}
                         </div>
                       </Box>
